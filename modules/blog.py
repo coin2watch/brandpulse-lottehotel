@@ -1,102 +1,67 @@
-import requests
-from bs4 import BeautifulSoup
-from datetime import datetime
-import gspread
-from google.oauth2.service_account import Credentials
-import json
 import os
-from openai import OpenAI
-from modules.utils import get_worksheet, is_duplicate
-
-# 설정
-BRANDS = ["롯데호텔", "신라호텔", "조선호텔", "베스트웨스턴"]
-SHEET_ID = "1j9K91M2TjxYtlt4senMTRANo9rMzpK7lvewmhJ__zNQ"
-SHEET_NAME = "BlogData"
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-# 인증
-creds = Credentials.from_service_account_info(
-    json.loads(os.getenv("GOOGLE_SHEETS_CREDENTIALS_JSON")),
-    scopes=SCOPES
+import time
+from datetime import datetime
+from playwright.sync_api import sync_playwright
+from utils import (
+    logger, get_today, is_duplicate, extract_keywords_from_text,
+    get_gsheet_client, summarize_with_gpt
 )
-worksheet = get_worksheet(SHEET_ID, SHEET_NAME, creds)
 
-def analyze_blog_with_gpt(title, snippet):
-    prompt = f"""다음 블로그 글의 제목과 요약을 기반으로 주요 키워드 3개와 감정(긍정 또는 부정)을 판단해줘. 감정은 단어 하나로만 말해줘.
+SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
+BRANDS = ["롯데호텔", "신라호텔", "조선호텔", "베스트웨스턴"]
 
-제목: {title}
-내용 요약: {snippet}
+def search_naver_blog(brand, max_results=5):
+    logger.info(f"[블로그 수집] {brand}")
+    blogs = []
 
-결과 형식:
-- 키워드: xxx, yyy, zzz
-- 감정: 긍정 or 부정
-"""
-    res = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[{"role": "user", "content": prompt}]
-    )
-    return res.choices[0].message.content.strip()
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        query = f"{brand} 블로그"
+        url = f"https://search.naver.com/search.naver?where=view&sm=tab_jum&query={query}"
+        page.goto(url)
+        page.wait_for_timeout(3000)
 
-def crawl_naver_blog(brand):
-    headers = {"User-Agent": "Mozilla/5.0"}
-    query = f"https://search.naver.com/search.naver?where=post&query={brand}"
-    res = requests.get(query, headers=headers)
-    soup = BeautifulSoup(res.text, "html.parser")
+        items = page.query_selector_all("li.bx._svp_item")
+        logger.info(f"[{brand}] 검색된 블로그 수: {len(items)}")
 
-    items = soup.select("div.total_wrap.api_ani_send")[:3]
-    today = datetime.today().strftime("%Y-%m-%d")
-    print(f"[{brand}] 검색된 블로그 수: {len(items)}")
+        for item in items[:max_results]:
+            try:
+                title_el = item.query_selector("a.api_txt_lines.total_tit")
+                title = title_el.inner_text()
+                link = title_el.get_attribute("href")
+                text_snippet_el = item.query_selector("div.api_txt_lines.dsc_txt")
+                snippet = text_snippet_el.inner_text() if text_snippet_el else ""
+                blogs.append({"title": title, "link": link, "snippet": snippet})
+            except Exception as e:
+                logger.warning(f"수집 중 오류: {e}")
 
-    for item in items:
-        title_el = item.select_one(".total_tit")
-        if not title_el:
-            continue
-        title = title_el.text.strip()
-        link = title_el.get("href")
-        desc_el = item.select_one(".total_dsc")
-        snippet = desc_el.text.strip() if desc_el else ""
+        browser.close()
+    return blogs
 
-        if is_duplicate(worksheet, today, brand, title):
-            print(f"[중복제외] {brand} - {title}")
-            continue
+def run_blog_module():
+    logger.info("✅ [Blog] 실행 시작")
+    today = get_today()
+    sheet = get_gsheet_client(SPREADSHEET_ID, "BlogData")
+    insight_sheet = get_gsheet_client(SPREADSHEET_ID, "BlogInsights")
 
-        gpt_result = analyze_blog_with_gpt(title, snippet)
-
-        try:
-            keywords_line = [line for line in gpt_result.split("\n") if "키워드" in line][0]
-            keywords = keywords_line.split(":")[1].strip()
-        except:
-            keywords = "추출 실패"
-
-        row = [today, brand, title, keywords, link]
-        try:
-            worksheet.append_row(row, value_input_option="USER_ENTERED")
-        except Exception as e:
-            print(f"[시트 저장 실패] {brand} - {title} → {e}")
-
-        # ✅ 정확한 중복 제거 (날짜 + 브랜드 + 제목)
-        if is_duplicate(worksheet, today, brand, title):
-            print(f"[중복제외] {brand} - {title}")
-            continue
-
-        gpt_result = analyze_blog_with_gpt(title, snippet)
-
-        # GPT 결과 파싱
-        try:
-            keywords_line = [line for line in gpt_result.split("\n") if "키워드" in line][0]
-            keywords = keywords_line.split(":")[1].strip()
-        except:
-            keywords = "추출 실패"
-
-        row = [today, brand, title, keywords, link]
-
-        try:
-            worksheet.append_row(row, value_input_option="USER_ENTERED")
-        except Exception as e:
-            print(f"[시트 저장 실패] {brand} - {title} → {e}")
-
-def run():
     for brand in BRANDS:
-        print(f"[블로그 수집] {brand}")
-        crawl_naver_blog(brand)
+        blogs = search_naver_blog(brand)
+        for blog in blogs:
+            title = blog["title"]
+            link = blog["link"]
+            snippet = blog["snippet"]
+
+            if is_duplicate(sheet, today, brand, title):
+                continue
+
+            keywords = extract_keywords_from_text(title + " " + snippet)
+            sentiment_keywords = [k for k in keywords if "좋" in k or "만족" in k or "싫" in k or "불만" in k]
+            summary = summarize_with_gpt(title + " " + snippet)
+
+            sheet.append_row([today, brand, title, ", ".join(sentiment_keywords), link], value_input_option="USER_ENTERED")
+            insight_sheet.append_row([today, brand, title, ", ".join(keywords), summary, link], value_input_option="USER_ENTERED")
+
+            time.sleep(1)
+
+    logger.info("✅ [Blog] 완료")
