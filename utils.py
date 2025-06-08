@@ -28,13 +28,20 @@ def get_today():
 # ✅ 3. Google Sheets 연결
 def get_gsheet_client(sheet_id, sheet_name):
     creds_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
-    creds_dict = json.loads(creds_json)
-    creds = Credentials.from_service_account_info(
-        creds_dict,
-        scopes=["https://www.googleapis.com/auth/spreadsheets"]
-    )
-    gc = gspread.authorize(creds)
-    return gc.open_by_key(sheet_id).worksheet(sheet_name)
+    if creds_json is None:
+        raise ValueError("❌ GOOGLE_SERVICE_ACCOUNT_JSON 환경변수가 설정되지 않았습니다.")
+
+    try:
+        creds_dict = json.loads(creds_json)
+        creds = Credentials.from_service_account_info(
+            creds_dict,
+            scopes=["https://www.googleapis.com/auth/spreadsheets"]
+        )
+        gc = gspread.authorize(creds)
+        return gc.open_by_key(sheet_id).worksheet(sheet_name)
+    except Exception as e:
+        logger.error(f"Google Sheets 인증 실패: {e}")
+        raise
 
 
 # ✅ 4. 중복 체크
@@ -65,8 +72,8 @@ def extract_keywords_from_text(text):
 
 # ✅ 7. GPT 요약
 def summarize_with_gpt(text):
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     try:
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         res = client.chat.completions.create(
             model="gpt-4o",
             messages=[{
@@ -81,10 +88,8 @@ def summarize_with_gpt(text):
         return "요약 실패"
 
 
+# ✅ 8. 모듈 실행 안전 처리
 def safe_run(module_name, func):
-    """
-    모듈 실행 시 에러를 잡아 로그를 남기고 전체 실행이 멈추지 않도록 처리
-    """
     print(f"✅ [{module_name}] 실행 시작")
     try:
         func()
