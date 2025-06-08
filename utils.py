@@ -96,3 +96,10 @@ def safe_run(module_name, func):
         print(f"✅ [{module_name}] 완료")
     except Exception as e:
         print(f"❌ [ERROR] {module_name} 실패: {e}")
+
+
+creds_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+if not creds_json:
+    logger.error("❌ GOOGLE_SERVICE_ACCOUNT_JSON 환경변수가 설정되지 않았습니다.")
+    raise Exception("GOOGLE_SERVICE_ACCOUNT_JSON 환경변수 없음")
+logger.info(f"[DEBUG] creds_json[:100]: {creds_json[:100]}...")  # 앞 100자만
