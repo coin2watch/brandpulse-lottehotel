@@ -2,7 +2,7 @@ name: Run BrandPulse
 
 on:
   schedule:
-    - cron: '0 22 * * *'  # 한국시간 오전 7시 = UTC 오후 10시
+    - cron: '0 22 * * *'  # 매일 오전 7시 (KST) = 오후 10시 (UTC)
   workflow_dispatch:
 
 jobs:
@@ -25,10 +25,9 @@ jobs:
           python -m playwright install chromium
 
       - name: ✅ Run main.py
+        run: python main.py
         env:
-         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-         GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
-         SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
-         PYTHONPATH: .
-       run: python main.py
-
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+          PYTHONPATH: .
