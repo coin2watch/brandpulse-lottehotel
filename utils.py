@@ -28,17 +28,24 @@ def get_today():
 # ✅ 3. Google Sheets 연결
 def get_gsheet_client(sheet_id, sheet_name):
     creds_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
-    if creds_json is None:
-        raise ValueError("❌ GOOGLE_SERVICE_ACCOUNT_JSON 환경변수가 설정되지 않았습니다.")
+    if not creds_json:
+        logger.error("❌ GOOGLE_SERVICE_ACCOUNT_JSON 환경변수가 설정되지 않았습니다.")
+        raise ValueError("GOOGLE_SERVICE_ACCOUNT_JSON 환경변수가 없습니다.")
 
     try:
         creds_dict = json.loads(creds_json)
+
+        # 🔧 줄바꿈 복원 (GitHub Secrets용)
+        if "private_key" in creds_dict:
+            creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+
         creds = Credentials.from_service_account_info(
             creds_dict,
             scopes=["https://www.googleapis.com/auth/spreadsheets"]
         )
         gc = gspread.authorize(creds)
         return gc.open_by_key(sheet_id).worksheet(sheet_name)
+
     except Exception as e:
         logger.error(f"Google Sheets 인증 실패: {e}")
         raise
@@ -62,18 +69,18 @@ def append_row_if_not_exists(sheet, row, match_cols=[0, 1, 2]):
     sheet.append_row(row, value_input_option="USER_ENTERED")
 
 
-# ✅ 6. 키워드 추출 (간단한 단어 필터링 기반)
+# ✅ 6. 키워드 추출 (간단한 필터)
 def extract_keywords_from_text(text):
-    text = re.sub(r"[^\uAC00-\uD7A3a-zA-Z0-9\s]", "", text)  # 특수문자 제거
+    text = re.sub(r"[^\uAC00-\uD7A3a-zA-Z0-9\s]", "", text)
     words = text.split()
     keywords = [w for w in words if len(w) > 1]
-    return keywords[:5]  # 상위 5개만 반환
+    return keywords[:5]
 
 
 # ✅ 7. GPT 요약
 def summarize_with_gpt(text):
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     try:
-        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         res = client.chat.completions.create(
             model="gpt-4o",
             messages=[{
@@ -88,7 +95,7 @@ def summarize_with_gpt(text):
         return "요약 실패"
 
 
-# ✅ 8. 모듈 실행 안전 처리
+# ✅ 8. 에러 무시 실행 래퍼
 def safe_run(module_name, func):
     print(f"✅ [{module_name}] 실행 시작")
     try:
@@ -96,10 +103,3 @@ def safe_run(module_name, func):
         print(f"✅ [{module_name}] 완료")
     except Exception as e:
         print(f"❌ [ERROR] {module_name} 실패: {e}")
-
-
-creds_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
-if not creds_json:
-    logger.error("❌ GOOGLE_SERVICE_ACCOUNT_JSON 환경변수가 설정되지 않았습니다.")
-    raise Exception("GOOGLE_SERVICE_ACCOUNT_JSON 환경변수 없음")
-logger.info(f"[DEBUG] creds_json[:100]: {creds_json[:100]}...")  # 앞 100자만
