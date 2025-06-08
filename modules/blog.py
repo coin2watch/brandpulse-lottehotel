@@ -40,28 +40,34 @@ def search_naver_blog(brand, max_results=5):
     return blogs
 
 def run():
-    logger.info("✅ [Blog] 실행 시작")
-    today = get_today()
-    sheet = get_gsheet_client(SPREADSHEET_ID, "BlogData")
-    insight_sheet = get_gsheet_client(SPREADSHEET_ID, "BlogInsights")
+    try:
+        logger.info("✅ [Blog] 실행 시작")
+        today = get_today()
+        sheet = get_gsheet_client(SPREADSHEET_ID, "BlogData")
+        insight_sheet = get_gsheet_client(SPREADSHEET_ID, "BlogInsights")
 
-    for brand in BRANDS:
-        blogs = search_naver_blog(brand)
-        for blog in blogs:
-            title = blog["title"]
-            link = blog["link"]
-            snippet = blog["snippet"]
+        for brand in BRANDS:
+            blogs = search_naver_blog(brand)
+            for blog in blogs:
+                title = blog["title"]
+                link = blog["link"]
+                snippet = blog["snippet"]
 
-            if is_duplicate(sheet, today, brand, title):
-                continue
+                if is_duplicate(sheet, today, brand, title):
+                    continue
 
-            keywords = extract_keywords_from_text(title + " " + snippet)
-            sentiment_keywords = [k for k in keywords if "좋" in k or "만족" in k or "싫" in k or "불만" in k]
-            summary = summarize_with_gpt(title + " " + snippet)
+                keywords = extract_keywords_from_text(title + " " + snippet)
+                sentiment_keywords = [k for k in keywords if "좋" in k or "만족" in k or "싫" in k or "불만" in k]
+                summary = summarize_with_gpt(title + " " + snippet)
 
-            sheet.append_row([today, brand, title, ", ".join(sentiment_keywords), link], value_input_option="USER_ENTERED")
-            insight_sheet.append_row([today, brand, title, ", ".join(keywords), summary, link], value_input_option="USER_ENTERED")
+                sheet.append_row([today, brand, title, ", ".join(sentiment_keywords), link], value_input_option="USER_ENTERED")
+                insight_sheet.append_row([today, brand, title, ", ".join(keywords), summary, link], value_input_option="USER_ENTERED")
 
-            time.sleep(1)
+                time.sleep(1)
 
-    logger.info("✅ [Blog] 완료")
+        logger.info("✅ [Blog] 완료")
+    except Exception as e:
+        logger.error(f"❌ [Blog Error] {e}")
+        import traceback
+        traceback.print_exc()
+
