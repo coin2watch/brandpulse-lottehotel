@@ -45,6 +45,7 @@ def crawl_naver_blog(brand):
     soup = BeautifulSoup(res.text, "html.parser")
     
     items = soup.select("li.bx._svp_item")[:3]
+    print(f"[{brand}] 검색된 블로그 수: {len(items)}")
     today = datetime.today().strftime("%Y-%m-%d")
 
     for item in items:
