@@ -39,7 +39,7 @@ def search_naver_blog(brand, max_results=5):
         browser.close()
     return blogs
 
-def run_blog_module():
+def run():
     logger.info("✅ [Blog] 실행 시작")
     today = get_today()
     sheet = get_gsheet_client(SPREADSHEET_ID, "BlogData")
