@@ -3,7 +3,6 @@ services:
     name: brandpulse-blog
     env: docker
     plan: free
-    repo: coin2watch/brandpulse-lottehotel
     branch: main
     autoDeploy: true
     envVars:
