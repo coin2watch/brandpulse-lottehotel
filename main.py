@@ -1,5 +1,5 @@
 from modules import blog, shopping, instagram, youtube, search
-from modules.utils import safe_run
+from utils import safe_run
 
 def main():
     safe_run("Blog", blog.run)
