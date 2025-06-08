@@ -79,3 +79,15 @@ def summarize_with_gpt(text):
     except Exception as e:
         logger.warning(f"GPT 요약 실패: {e}")
         return "요약 실패"
+
+
+def safe_run(module_name, func):
+    """
+    모듈 실행 시 에러를 잡아 로그를 남기고 전체 실행이 멈추지 않도록 처리
+    """
+    print(f"✅ [{module_name}] 실행 시작")
+    try:
+        func()
+        print(f"✅ [{module_name}] 완료")
+    except Exception as e:
+        print(f"❌ [ERROR] {module_name} 실패: {e}")
