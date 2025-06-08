@@ -1,29 +1,24 @@
 import gspread
-from google.oauth2.service_account import Credentials
-import json
-import os
+from datetime import datetime
 
-# 시트 인증 및 접근
-def get_worksheet(sheet_id, sheet_name):
-    creds = Credentials.from_service_account_info(
-        json.loads(os.getenv("GOOGLE_SHEETS_CREDENTIALS_JSON")),
-        scopes=["https://www.googleapis.com/auth/spreadsheets"]
-    )
+def get_worksheet(sheet_id, sheet_name, creds):
     gc = gspread.authorize(creds)
-    sheet = gc.open_by_key(sheet_id)
-    return sheet.worksheet(sheet_name)
+    sh = gc.open_by_key(sheet_id)
+    return sh.worksheet(sheet_name)
 
-# ✅ 중복 확인 함수
-def is_duplicate(worksheet, check_cols, new_row_values):
-    """
-    worksheet: gspread worksheet 객체
-    check_cols: 중복 확인할 열 인덱스 리스트 (0부터 시작)
-    new_row_values: 새로 넣으려는 행 데이터 (list)
-
-    return: True(중복), False(중복 아님)
-    """
-    all_rows = worksheet.get_all_values()
-    for row in all_rows:
-        if all(row[i] == new_row_values[i] for i in check_cols):
+def is_duplicate(ws, date, brand, title_col=3):
+    """이미 같은 날짜+브랜드+제목이 존재하는지 여부"""
+    existing = ws.get_all_values()
+    for row in existing[1:]:  # 헤더 제외
+        if len(row) >= title_col and row[0] == date and row[1] == brand:
             return True
     return False
+
+def safe_run(module_name, func):
+    """모듈 실행 시 에러를 잡고 전체 실행이 멈추지 않도록 처리"""
+    print(f"✅ [{module_name}] 실행 시작")
+    try:
+        func()
+        print(f"✅ [{module_name}] 완료")
+    except Exception as e:
+        print(f"❌ [ERROR] {module_name} 실패: {e}")
