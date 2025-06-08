@@ -24,7 +24,7 @@ worksheet = get_worksheet(SHEET_ID, SHEET_NAME, creds)
 
 def analyze_blog_with_gpt(title, snippet):
     prompt = f"""다음 블로그 글의 제목과 요약을 기반으로 주요 키워드 3개와 감정(긍정 또는 부정)을 판단해줘. 감정은 단어 하나로만 말해줘.
-    
+
 제목: {title}
 내용 요약: {snippet}
 
@@ -43,10 +43,10 @@ def crawl_naver_blog(brand):
     query = f"https://search.naver.com/search.naver?where=post&query={brand}"
     res = requests.get(query, headers=headers)
     soup = BeautifulSoup(res.text, "html.parser")
-    
+
     items = soup.select("li.bx._svp_item")[:3]
-    print(f"[{brand}] 검색된 블로그 수: {len(items)}")
     today = datetime.today().strftime("%Y-%m-%d")
+    print(f"[{brand}] 검색된 블로그 수: {len(items)}")
 
     for item in items:
         title_el = item.select_one(".api_txt_lines.total_tit")
@@ -57,8 +57,8 @@ def crawl_naver_blog(brand):
         desc_el = item.select_one(".api_txt_lines.dsc_txt")
         snippet = desc_el.text.strip() if desc_el else ""
 
-        # 중복 제거
-        if is_duplicate(worksheet, today, brand, title_col=3) and title:
+        # ✅ 정확한 중복 제거 (날짜 + 브랜드 + 제목)
+        if is_duplicate(worksheet, today, brand, title):
             print(f"[중복제외] {brand} - {title}")
             continue
 
@@ -72,7 +72,11 @@ def crawl_naver_blog(brand):
             keywords = "추출 실패"
 
         row = [today, brand, title, keywords, link]
-        worksheet.append_row(row, value_input_option="USER_ENTERED")
+
+        try:
+            worksheet.append_row(row, value_input_option="USER_ENTERED")
+        except Exception as e:
+            print(f"[시트 저장 실패] {brand} - {title} → {e}")
 
 def run():
     for brand in BRANDS:
