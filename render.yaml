@@ -1,6 +1,6 @@
 services:
-  - type: worker
-    name: brandpulse-blog
+  - type: web
+    name: brandpulse-web
     env: docker
     plan: free
     branch: main
