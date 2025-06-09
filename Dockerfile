@@ -1,10 +1,8 @@
-FROM python:3.10-slim
+FROM mcr.microsoft.com/playwright/python:v1.52.0-jammy
 
 WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
 COPY . .
 
-CMD ["python", "app.py"]
+RUN pip install -r requirements.txt
+
+CMD ["python", "blog.py"]
