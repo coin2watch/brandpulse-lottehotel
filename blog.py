@@ -60,3 +60,11 @@ app = Flask(__name__)
 def index():
     run_blog_crawler()
     return "✅ BlogData updated"
+
+from flask import Flask
+app = Flask(__name__)
+
+@app.route("/")
+def index():
+    run_blog_crawler()
+    return "✅ BlogData updated"
