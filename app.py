@@ -1,6 +1,5 @@
-import os
 from flask import Flask
-from modules import blog
+import os
 
 app = Flask(__name__)
 
@@ -8,10 +7,17 @@ app = Flask(__name__)
 def index():
     return "✅ BrandPulse Web Service is running."
 
-@app.route("/run-blog", methods=["GET"])
-def run_blog():
-    blog.run()
-    return "✅ Blog crawling done!", 200
+try:
+    from modules import blog
+
+    @app.route("/run-blog", methods=["GET"])
+    def run_blog():
+        blog.run()
+        return "✅ Blog crawling done!", 200
+except Exception as e:
+    @app.route("/run-blog", methods=["GET"])
+    def run_blog_error():
+        return f"❌ run-blog 라우트 등록 실패: {e}", 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
