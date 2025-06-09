@@ -1,10 +1,8 @@
 services:
   - type: web
     name: brandpulse-blog-crawler
-    env: python
-    buildCommand: "pip install -r requirements.txt && playwright install"
-    startCommand: "gunicorn --bind 0.0.0.0:10000 blog:app"
+    runtime: docker
     plan: free
     region: oregon
     branch: main
-    runtime: docker
+    dockerfilePath: ./Dockerfile
