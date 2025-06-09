@@ -23,3 +23,11 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
     
+@app.route("/debug")
+def debug():
+    try:
+        from modules import blog
+        return "✅ blog 모듈 import 성공", 200
+    except Exception as e:
+        return f"❌ blog 모듈 import 실패: {e}", 500
+        
