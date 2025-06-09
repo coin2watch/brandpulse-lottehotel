@@ -5,10 +5,4 @@ services:
     plan: free
     branch: main
     autoDeploy: true
-    buildCommand: ""
     startCommand: "python app.py"
-    envVars:
-      - key: GOOGLE_SERVICE_ACCOUNT_JSON
-        value: 'YOUR_JSON_STRING_HERE'
-      - key: SPREADSHEET_ID
-        value: 'YOUR_SPREADSHEET_ID_HERE'
