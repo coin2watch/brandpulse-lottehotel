@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 import traceback
 
@@ -22,3 +23,7 @@ except Exception as e:
     @app.route("/run-blog", methods=["GET"])
     def run_blog_error():
         return f"❌ Error loading blog: {str(e)}", 500
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))  # Render에서 포트를 읽음
+    app.run(host="0.0.0.0", port=port)
