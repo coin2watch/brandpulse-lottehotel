@@ -1,12 +1,10 @@
-from modules import blog, shopping, instagram, youtube, search
-from utils import safe_run
-
-def main():
-    safe_run("Blog", blog.run)
-    safe_run("Shopping", shopping.run)
-    safe_run("Instagram", instagram.run)
-    safe_run("Youtube", youtube.run)
-    safe_run("Search", search.run)
+# main.py
+from blog import crawl_naver_blog
 
 if __name__ == "__main__":
-    main()
+    keyword_list = ["롯데호텔", "신라호텔", "조선호텔", "베스트웨스턴"]
+    for keyword in keyword_list:
+        print(f"✅ [Blog] {keyword} 수집 중...")
+        posts = crawl_naver_blog(keyword)
+        for post in posts:
+            print(f"• {post['title']} | {post['link']}")
