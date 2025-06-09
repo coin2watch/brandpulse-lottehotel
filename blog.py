@@ -1,5 +1,12 @@
-# blog.py
+from flask import Flask
+import threading
 from playwright.sync_api import sync_playwright
+
+app = Flask(__name__)
+
+@app.route("/")
+def index():
+    return "✅ BrandPulse Blog Crawler is running"
 
 def crawl_naver_blog(keyword):
     results = []
@@ -16,3 +23,17 @@ def crawl_naver_blog(keyword):
             results.append({'title': title, 'link': link})
         browser.close()
     return results
+
+def run_crawler():
+    print("✅ [Blog] 실행 시작")
+    keywords = ["롯데호텔", "신라호텔", "조선호텔", "베스트웨스턴"]
+    for keyword in keywords:
+        data = crawl_naver_blog(keyword)
+        print(f"\n🔎 {keyword} 결과:")
+        for item in data:
+            print(f"📌 {item['title']} - {item['link']}")
+    print("✅ [Blog] 완료")
+
+if __name__ == "__main__":
+    threading.Thread(target=run_crawler).start()
+    app.run(host="0.0.0.0", port=10000)
