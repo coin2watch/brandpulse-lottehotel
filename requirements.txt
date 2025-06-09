@@ -1,1 +1,6 @@
-playwright==1.43.0
+playwright
+pandas
+openai
+gspread
+oauth2client
+python-dotenv
