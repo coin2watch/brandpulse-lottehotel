@@ -5,11 +5,8 @@ services:
     plan: free
     branch: main
     autoDeploy: true
-    startCommand: gunicorn -b 0.0.0.0:$PORT app:app
     envVars:
       - key: GOOGLE_SERVICE_ACCOUNT_JSON
         value: 'YOUR_JSON_STRING_HERE'
       - key: SPREADSHEET_ID
         value: 'YOUR_SPREADSHEET_ID_HERE'
-      - key: OPENAI_API_KEY
-        value: 'YOUR_OPENAI_API_KEY_HERE'
