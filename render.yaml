@@ -2,8 +2,6 @@ services:
   - type: web
     name: brandpulse-blog-crawler
     runtime: python
-    buildCommand: |
-      pip install -r requirements.txt
-      playwright install chromium
+    buildCommand: ./build.sh
     startCommand: python blog.py
     plan: free
