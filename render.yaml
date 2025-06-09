@@ -6,3 +6,4 @@ services:
     region: oregon
     branch: main
     dockerfilePath: ./Dockerfile
+    startCommand: "gunicorn --bind 0.0.0.0:$PORT blog:app"
