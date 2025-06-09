@@ -2,6 +2,11 @@ services:
   - type: web
     name: brandpulse-blog-crawler
     runtime: python
-    buildCommand: ./build.sh
+    envVars:
+      - key: PLAYWRIGHT_BROWSERS_PATH
+        value: /opt/render/.cache/ms-playwright
+    buildCommand: |
+      pip install -r requirements.txt
+      playwright install
     startCommand: python blog.py
     plan: free
