@@ -1,5 +1,4 @@
 from flask import Flask
-import os
 
 app = Flask(__name__)
 
@@ -7,6 +6,6 @@ app = Flask(__name__)
 def index():
     return "✅ BrandPulse Web Service is running."
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+@app.route("/run-blog")
+def run_blog():
+    return "✅ Blog endpoint hit!", 200
