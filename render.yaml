@@ -3,10 +3,11 @@ services:
     name: brandpulse-web
     env: docker
     plan: free
-    branch: main
     autoDeploy: true
+    buildCommand: ""
+    startCommand: ""
     envVars:
       - key: GOOGLE_SERVICE_ACCOUNT_JSON
-        value: 'YOUR_JSON_STRING_HERE'
+        value: 'YOUR_JSON_STRING'
       - key: SPREADSHEET_ID
-        value: 'YOUR_SPREADSHEET_ID_HERE'
+        value: 'YOUR_SPREADSHEET_ID'
