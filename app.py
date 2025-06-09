@@ -21,7 +21,7 @@ except Exception as e:
     def run_blog_error():
         return f"❌ Error loading blog: {str(e)}", 500
 
-# Render 배포용 포트 바인딩 처리
+# 반드시 Render의 포트를 사용하도록 설정
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
+    port = int(os.environ.get("PORT", "10000"))  # 기본값 설정해도 무방
     app.run(host="0.0.0.0", port=port)
