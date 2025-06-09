@@ -1,5 +1,6 @@
 from flask import Flask
 import threading
+import subprocess
 from playwright.sync_api import sync_playwright
 
 app = Flask(__name__)
@@ -26,6 +27,10 @@ def crawl_naver_blog(keyword):
 
 def run_crawler():
     print("✅ [Blog] 실행 시작")
+    
+    # ✅ playwright install 강제 실행 (런타임 중)
+    subprocess.run(["playwright", "install", "chromium"], check=True)
+
     keywords = ["롯데호텔", "신라호텔", "조선호텔", "베스트웨스턴"]
     for keyword in keywords:
         data = crawl_naver_blog(keyword)
