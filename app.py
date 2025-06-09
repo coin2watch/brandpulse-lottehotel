@@ -1,13 +1,27 @@
-import os
 from flask import Flask
+import os
 
 app = Flask(__name__)
 
 @app.route("/")
-def home():
-    return "✅ BrandPulse is live!"
+def index():
+    return "✅ BrandPulse Web Service is running."
 
+# blog 모듈 import 시도
+try:
+    from modules import blog
+
+    @app.route("/run-blog", methods=["GET"])
+    def run_blog():
+        blog.run()
+        return "✅ Blog crawling done!", 200
+
+except Exception as e:
+    @app.route("/run-blog", methods=["GET"])
+    def run_blog_error():
+        return f"❌ Error loading blog: {str(e)}", 500
+
+# Render 배포용 포트 바인딩 처리
 if __name__ == "__main__":
-    import os
-    port = int(os.environ.get("PORT", 10000))  # Render가 지정한 포트 사용
+    port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
