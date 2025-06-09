@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from modules import blog
 
@@ -13,4 +14,5 @@ def run_blog():
     return "✅ Blog crawling done!", 200
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    port = int(os.environ.get("PORT", 10000))  # Render 호환
+    app.run(host="0.0.0.0", port=port)
