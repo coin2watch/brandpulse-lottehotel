@@ -7,9 +7,13 @@ from utils import (
     get_gsheet_client, summarize_with_gpt
 )
 
+# 👉 필수 환경변수: 구글 시트 ID
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
+
+# 👉 대상 브랜드
 BRANDS = ["롯데호텔", "신라호텔", "조선호텔", "베스트웨스턴"]
 
+# ✅ 블로그 검색 함수
 def search_naver_blog(brand, max_results=5):
     logger.info(f"[블로그 수집] {brand}")
     blogs = []
@@ -39,10 +43,13 @@ def search_naver_blog(brand, max_results=5):
         browser.close()
     return blogs
 
+# ✅ 전체 실행 함수
 def run():
     try:
         logger.info("✅ [Blog] 실행 시작")
         today = get_today()
+
+        # 시트 연결
         sheet = get_gsheet_client(SPREADSHEET_ID, "BlogData")
         insight_sheet = get_gsheet_client(SPREADSHEET_ID, "BlogInsights")
 
@@ -57,12 +64,17 @@ def run():
                     continue
 
                 keywords = extract_keywords_from_text(title + " " + snippet)
-                sentiment_keywords = [k for k in keywords if "좋" in k or "만족" in k or "싫" in k or "불만" in k]
+                sentiment_keywords = [k for k in keywords if any(s in k for s in ["좋", "만족", "싫", "불만"])]
                 summary = summarize_with_gpt(title + " " + snippet)
 
-                sheet.append_row([today, brand, title, ", ".join(sentiment_keywords), link], value_input_option="USER_ENTERED")
-                insight_sheet.append_row([today, brand, title, ", ".join(keywords), summary, link], value_input_option="USER_ENTERED")
-
+                sheet.append_row(
+                    [today, brand, title, ", ".join(sentiment_keywords), link],
+                    value_input_option="USER_ENTERED"
+                )
+                insight_sheet.append_row(
+                    [today, brand, title, ", ".join(keywords), summary, link],
+                    value_input_option="USER_ENTERED"
+                )
                 time.sleep(1)
 
         logger.info("✅ [Blog] 완료")
@@ -70,4 +82,4 @@ def run():
         logger.error(f"❌ [Blog Error] {e}")
         import traceback
         traceback.print_exc()
-
+        
