@@ -9,21 +9,17 @@ import re
 
 # ✅ 1. 로깅 설정
 logger = logging.getLogger("BrandPulse")
-logger.setLevel(logging.INFO)
-
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-formatter = logging.Formatter("[%(asctime)s] %(levelname)s - %(message)s")
-console_handler.setFormatter(formatter)
-
-if not logger.hasHandlers():
+if not logger.hasHandlers():  # 중복 방지
+    logger.setLevel(logging.INFO)
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    formatter = logging.Formatter("[%(asctime)s] %(levelname)s - %(message)s")
+    console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
-
 
 # ✅ 2. 날짜 헬퍼
 def get_today():
     return datetime.now().strftime("%Y-%m-%d")
-
 
 # ✅ 3. Google Sheets 연결
 def get_gsheet_client(sheet_id, sheet_name):
@@ -47,9 +43,8 @@ def get_gsheet_client(sheet_id, sheet_name):
         return gc.open_by_key(sheet_id).worksheet(sheet_name)
 
     except Exception as e:
-        logger.error(f"Google Sheets 인증 실패: {e}")
+        logger.error(f"❌ Google Sheets 인증 실패: {e}")
         raise
-
 
 # ✅ 4. 중복 체크
 def is_duplicate(sheet, date, brand, title):
@@ -59,15 +54,13 @@ def is_duplicate(sheet, date, brand, title):
             return True
     return False
 
-
 # ✅ 5. 중복 제외 append
 def append_row_if_not_exists(sheet, row, match_cols=[0, 1, 2]):
     all_rows = sheet.get_all_values()
     for r in all_rows[1:]:
         if all(r[i] == row[i] for i in match_cols if i < len(r)):
-            return  # 중복인 경우
+            return
     sheet.append_row(row, value_input_option="USER_ENTERED")
-
 
 # ✅ 6. 키워드 추출 (간단한 필터)
 def extract_keywords_from_text(text):
@@ -76,11 +69,10 @@ def extract_keywords_from_text(text):
     keywords = [w for w in words if len(w) > 1]
     return keywords[:5]
 
-
 # ✅ 7. GPT 요약
 def summarize_with_gpt(text):
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     try:
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         res = client.chat.completions.create(
             model="gpt-4o",
             messages=[{
@@ -89,11 +81,10 @@ def summarize_with_gpt(text):
             }],
             timeout=10
         )
-        return res.choices[0].message.content.strip()
+        return res.choices[0].message.content.strip() if res.choices else "요약 없음"
     except Exception as e:
-        logger.warning(f"GPT 요약 실패: {e}")
+        logger.warning(f"❌ GPT 요약 실패: {e}")
         return "요약 실패"
-
 
 # ✅ 8. 에러 무시 실행 래퍼
 def safe_run(module_name, func):
@@ -103,3 +94,4 @@ def safe_run(module_name, func):
         print(f"✅ [{module_name}] 완료")
     except Exception as e:
         print(f"❌ [ERROR] {module_name} 실패: {e}")
+        
