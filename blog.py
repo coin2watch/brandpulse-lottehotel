@@ -1,83 +1,62 @@
-# blog.py
-from flask import Flask
 from playwright.sync_api import sync_playwright
-import datetime
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+from datetime import datetime
+import os
 import openai
 
-# GPT API Key
-openai.api_key = "YOUR_OPENAI_API_KEY"
+# 구글 시트 인증
+def get_worksheet():
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    creds_json = os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"]
+    creds = ServiceAccountCredentials.from_json_keyfile_name("gcp_creds.json", scope)
+    with open("gcp_creds.json", "w") as f:
+        f.write(creds_json)
+    client = gspread.authorize(creds)
+    spreadsheet = client.open("BrandPulse_LotteHotel")
+    worksheet = spreadsheet.worksheet("BlogData")
+    return worksheet
 
-app = Flask(__name__)
+# ChatGPT 감정 분석
+def analyze_sentiment(text):
+    openai.api_key = os.environ["OPENAI_API_KEY"]
+    prompt = f"아래 블로그 제목에 대한 감정 분석 결과를 '긍정', '부정', '중립' 중 하나로만 요약해줘:\n\n제목: {text}"
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return response.choices[0].message.content.strip()
 
+# 블로그 수집
 def crawl_naver_blog(keyword):
     results = []
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
-        search_url = f"https://search.naver.com/search.naver?where=view&query={keyword}"
-        page.goto(search_url, timeout=60000)
+        page.goto(f"https://search.naver.com/search.naver?where=view&query={keyword}", timeout=60000)
         page.wait_for_selector("a.api_txt_lines.total_tit", timeout=10000)
         elements = page.query_selector_all("a.api_txt_lines.total_tit")
-        for element in elements[:5]:  # 상위 5개만
-            title = element.inner_text()
-            link = element.get_attribute("href")
-            results.append({'title': title, 'link': link})
+        for el in elements[:5]:
+            title = el.inner_text()
+            link = el.get_attribute("href")
+            sentiment = analyze_sentiment(title)
+            results.append([datetime.now().strftime("%Y-%m-%d"), keyword, title, "-", sentiment, link])
         browser.close()
     return results
 
-def analyze_with_gpt(title):
-    prompt = f"""
-    아래는 브랜드 관련 블로그 글 제목이야: "{title}"
-    1. 이 제목이 주는 감정(긍정/부정/중립)을 판단해줘.
-    2. 주요 키워드 3개를 뽑아줘.
-    형식은 다음처럼 요약해줘:
-    감정 분석: [긍정/부정/중립]
-    키워드: [키워드1, 키워드2, 키워드3]
-    """
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=200
-    )
-    return response.choices[0].message['content']
+# 실행 및 저장
+def run_blog_crawler():
+    worksheet = get_worksheet()
+    keywords = ["롯데호텔", "신라호텔", "조선호텔", "베스트웨스턴"]
+    for keyword in keywords:
+        data = crawl_naver_blog(keyword)
+        worksheet.append_rows(data, value_input_option="USER_ENTERED")
 
-def save_to_google_sheets(brand, results):
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds = ServiceAccountCredentials.from_json_keyfile_name("YOUR_JSON_FILENAME.json", scope)
-    client = gspread.authorize(creds)
-
-    sheet = client.open("BrandPulseData").worksheet("BlogData")
-    today = datetime.datetime.now().strftime("%Y-%m-%d")
-
-    for item in results:
-        gpt_result = analyze_with_gpt(item['title'])
-
-        # 감정 분석, 키워드 파싱
-        sentiment_line = ""
-        keyword_line = ""
-        for line in gpt_result.splitlines():
-            if "감정 분석" in line:
-                sentiment_line = line.split(":")[-1].strip()
-            elif "키워드" in line:
-                keyword_line = line.split(":")[-1].strip()
-
-        sheet.append_row([
-            today,
-            brand,
-            item['title'],
-            keyword_line,
-            sentiment_line,
-            item['link']
-        ])
+# Flask 앱 엔트리포인트
+from flask import Flask
+app = Flask(__name__)
 
 @app.route("/")
-def run_crawler():
-    brand = "롯데호텔"
-    results = crawl_naver_blog(brand)
-    save_to_google_sheets(brand, results)
-    return "✅ Blog Crawling & Save Completed"
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+def index():
+    run_blog_crawler()
+    return "✅ BlogData updated"
