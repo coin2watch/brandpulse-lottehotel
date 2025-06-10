@@ -6,6 +6,7 @@ import os
 import openai
 import json
 from flask import Flask
+import threading
 
 # 구글 시트 인증
 def get_worksheet():
@@ -32,9 +33,9 @@ def analyze_sentiment(text):
 def crawl_naver_blog(keyword):
     results = []
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=True, executable_path="/usr/bin/chromium")
         page = browser.new_page()
-        page.goto(f"https://search.naver.com/search.naver?where=view&query={keyword}", timeout=60000)
+        page.goto(f"https://search.naver.com/search.naver?where=view&query={keyword}", timeout=90000)
         page.wait_for_selector("a.api_txt_lines.total_tit", timeout=10000)
         elements = page.query_selector_all("a.api_txt_lines.total_tit")
         for el in elements[:5]:
@@ -58,5 +59,5 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    run_blog_crawler()
-    return "✅ BlogData updated"
+    threading.Thread(target=run_blog_crawler).start()
+    return "✅ BlogData update started"
