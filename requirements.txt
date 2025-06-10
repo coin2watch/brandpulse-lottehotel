@@ -1,6 +1,6 @@
+playwright
 flask
-gunicorn
 gspread
 oauth2client
 openai
-playwright
+gunicorn
