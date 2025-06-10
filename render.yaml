@@ -32,8 +32,5 @@ RUN playwright install --with-deps chromium
 # 앱 코드 복사
 COPY . .
 
-# 포트 환경 변수 정의
-ENV PORT=10000
-
 # 앱 실행
 CMD ["gunicorn", "blog:app", "--bind", "0.0.0.0:$PORT"]
