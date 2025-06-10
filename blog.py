@@ -8,6 +8,11 @@ import openai
 import json
 import threading
 
+def start_crawler_once():
+    threading.Thread(target=run_blog_crawler, daemon=True).start()
+
+start_crawler_once()
+
 # 구글 시트 인증
 def get_worksheet():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
