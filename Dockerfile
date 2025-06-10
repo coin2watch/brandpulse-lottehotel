@@ -21,4 +21,4 @@ COPY . .
 ENV PORT=10000
 
 # 앱 실행 (포트 환경변수 바인딩을 $PORT로 설정)
-CMD ["gunicorn", "blog:app", "--bind", "0.0.0.0:$PORT"]
+CMD gunicorn blog:app --bind 0.0.0.0:${PORT}
