@@ -14,7 +14,7 @@ def get_worksheet():
     creds_dict = json.loads(creds_json)
     creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
     client = gspread.authorize(creds)
-    spreadsheet = client.open("BrandPulse_LotteHotel")
+    spreadsheet = client.open("BrandPulse_Lotte_Hotel")
     worksheet = spreadsheet.worksheet("BlogData")
     return worksheet
 
