@@ -1,13 +1,39 @@
-services:
-  - type: web
-    name: brandpulse-blog
-    runtime: docker
-    plan: free
-    envVars:
-      - key: GOOGLE_SERVICE_ACCOUNT_JSON
-        sync: false
-      - key: OPENAI_API_KEY
-        sync: false
-    dockerContext: .
-    dockerfilePath: Dockerfile
-    startCommand: gunicorn blog:app --bind 0.0.0.0:$PORT
+FROM python:3.10-slim
+
+# 필수 패키지 설치 (Playwright에 필요)
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    unzip \
+    fonts-liberation \
+    libnss3 \
+    libatk-bridge2.0-0 \
+    libxss1 \
+    libasound2 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libgtk-3-0 \
+    libgbm-dev \
+    ca-certificates \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# 작업 디렉토리 설정
+WORKDIR /app
+
+# requirements.txt 복사 및 설치
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
+
+# Playwright 브라우저 설치
+RUN playwright install --with-deps chromium
+
+# 앱 코드 복사
+COPY . .
+
+# 포트 환경 변수 정의
+ENV PORT=10000
+
+# 앱 실행
+CMD ["gunicorn", "blog:app", "--bind", "0.0.0.0:$PORT"]
