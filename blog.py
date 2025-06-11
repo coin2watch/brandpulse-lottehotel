@@ -58,20 +58,22 @@ def crawl_naver_blog(keyword):
 
 # 실행 및 저장
 def run_blog_crawler():
-    print("run_blog_crawler started")
-    worksheet = get_worksheet()
-    print("worksheet loaded")
-    keywords = ["롯데호텔", "신라호텔", "조선호텔", "베스트웨스턴"]
-    for keyword in keywords:
-        print(f"crawling {keyword}")
-        data = crawl_naver_blog(keyword)
-        print(f"data for {keyword}: {data}")
-        if data:
-            worksheet.append_rows(data, value_input_option="USER_ENTERED")
-            print(f"data appended for {keyword}")
-        else:
-            print(f"no data to append for {keyword}")
-
+    try:
+        print("run_blog_crawler started")
+        worksheet = get_worksheet()
+        print("worksheet loaded")
+        keywords = ["롯데호텔", "신라호텔", "조선호텔", "베스트웨스턴"]
+        for keyword in keywords:
+            print(f"crawling {keyword}")
+            data = crawl_naver_blog(keyword)
+            print(f"data for {keyword}: {data}")
+            if data:
+                worksheet.append_rows(data, value_input_option="USER_ENTERED")
+                print(f"data appended for {keyword}")
+            else:
+                print(f"no data to append for {keyword}")
+    except Exception as e:
+        print(f"run_blog_crawler 예외: {e}")
 
 # Flask 앱 설정
 app = Flask(__name__)
@@ -82,6 +84,7 @@ def index():
 
 @app.route("/run")
 def run():
+    print("🔥 /run 라우트 호출됨")
     threading.Thread(target=run_blog_crawler).start()
     return "✅ BlogData update started"
 
