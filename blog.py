@@ -37,7 +37,7 @@ def analyze_sentiment(text):
 def crawl_naver_blog(keyword):
     results = []
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
         page = browser.new_page()
         try:
             page.goto(f"https://search.naver.com/search.naver?where=view&query={keyword}", timeout=90000)
