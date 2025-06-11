@@ -8,7 +8,8 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install --upgrade pip && pip install flask gspread oauth2client openai gunicorn
+RUN pip install playwright
 
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 RUN playwright install chromium
