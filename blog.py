@@ -72,6 +72,7 @@ def run_blog_crawler():
         else:
             print(f"no data to append for {keyword}")
 
+
 # Flask 앱 설정
 app = Flask(__name__)
 
