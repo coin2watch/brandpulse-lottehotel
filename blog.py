@@ -40,6 +40,7 @@ def crawl_naver_blog(keyword):
         browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
         page = browser.new_page()
         try:
+            print(f"▶️ 크롤링 시작: {keyword}")
             page.goto(f"https://search.naver.com/search.naver?where=view&query={keyword}", timeout=90000)
             page.wait_for_selector("a.api_txt_lines.total_tit", timeout=10000)
             elements = page.query_selector_all("a.api_txt_lines.total_tit")
@@ -48,6 +49,7 @@ def crawl_naver_blog(keyword):
                 link = el.get_attribute("href")
                 sentiment = analyze_sentiment(title)
                 results.append([datetime.now().strftime("%Y-%m-%d"), keyword, title, "-", sentiment, link])
+            print(f"✅ 크롤링 성공: {keyword}, {len(results)}건")
         except Exception as e:
             print(f"❌ 크롤링 실패 ({keyword}): {str(e)}")
         finally:
@@ -56,12 +58,19 @@ def crawl_naver_blog(keyword):
 
 # 실행 및 저장
 def run_blog_crawler():
+    print("run_blog_crawler started")
     worksheet = get_worksheet()
+    print("worksheet loaded")
     keywords = ["롯데호텔", "신라호텔", "조선호텔", "베스트웨스턴"]
     for keyword in keywords:
+        print(f"crawling {keyword}")
         data = crawl_naver_blog(keyword)
+        print(f"data for {keyword}: {data}")
         if data:
             worksheet.append_rows(data, value_input_option="USER_ENTERED")
+            print(f"data appended for {keyword}")
+        else:
+            print(f"no data to append for {keyword}")
 
 # Flask 앱 설정
 app = Flask(__name__)
