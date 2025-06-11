@@ -82,11 +82,10 @@ def start_crawler_once():
 # 함수 정의가 모두 끝난 뒤에 호출!
 start_crawler_once()
 
+# 환경변수 상태 확인용 디버그 라우트
 @app.route("/env-debug")
 def env_debug():
-    import os
     val = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
     if not val:
         return "GOOGLE_SERVICE_ACCOUNT_JSON is NOT set!", 500
     return f"Length: {len(val)}<br>Start: {val[:100]}<br>End: {val[-100:]}"
-
