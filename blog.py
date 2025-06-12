@@ -41,20 +41,28 @@ def crawl_naver_blog(keyword):
         page = browser.new_page()
         try:
             print(f"▶️ 크롤링 시작: {keyword}")
-            page.goto(f"https://search.naver.com/search.naver?where=view&query={keyword}", timeout=90000)
-            page.wait_for_selector("a.api_txt_lines.total_tit", timeout=10000)
-            elements = page.query_selector_all("a.api_txt_lines.total_tit")
-            for el in elements[:5]:
-                title = el.inner_text()
-                link = el.get_attribute("href")
+            page.goto(f"https://search.naver.com/search.naver?where=blog&query={keyword}", timeout=90000)
+            page.wait_for_selector("li.bx", timeout=10000)
+            items = page.query_selector_all("li.bx")
+            for item in items[:5]:
+                title_el = item.query_selector("a.title_link")
+                date_el = item.query_selector("span.sub")
+                if not title_el or not date_el:
+                    continue
+                title = title_el.inner_text()
+                link = title_el.get_attribute("href")
+                raw_date = date_el.inner_text()
+                # 날짜 파싱 함수 적용
+                # post_date = parse_post_date(raw_date)
                 sentiment = analyze_sentiment(title)
-                results.append([datetime.now().strftime("%Y-%m-%d"), keyword, title, "-", sentiment, link])
+                results.append([datetime.now().strftime("%Y-%m-%d"), keyword, title, raw_date, sentiment, link])
             print(f"✅ 크롤링 성공: {keyword}, {len(results)}건")
         except Exception as e:
             print(f"❌ 크롤링 실패 ({keyword}): {str(e)}")
         finally:
             browser.close()
     return results
+
 
 # 실행 및 저장
 def run_blog_crawler():
