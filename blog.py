@@ -13,21 +13,18 @@ app = Flask(__name__)
 
 def get_worksheet(log):
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds_json = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
-    if not creds_json:
-        log.append("❌ GOOGLE_SERVICE_ACCOUNT_JSON 환경변수가 없습니다.")
-        raise ValueError("GOOGLE_SERVICE_ACCOUNT_JSON 환경변수가 없습니다.")
+    json_path = "coin2watch-youtube-2eb321e17fd0.json"  # Secret File 이름과 동일하게!
     try:
-        creds_dict = json.loads(creds_json)
-        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+        creds = ServiceAccountCredentials.from_json_keyfile_name(json_path, scope)
         client = gspread.authorize(creds)
         spreadsheet = client.open("BrandPulse_Lotte_Hotel")
         worksheet = spreadsheet.worksheet("BlogData")
-        log.append("✅ 구글시트 인증 및 접근 성공")
+        log.append("✅ 구글시트 인증 및 접근 성공 (파일 인증)")
         return worksheet
     except Exception as e:
         log.append(f"❌ 구글시트 인증/접근 실패: {e}")
         raise
+
 
 def analyze_summary(title, link, log):
     openai.api_key = os.environ.get("OPENAI_API_KEY")
