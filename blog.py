@@ -25,6 +25,12 @@ def test_naver():
     except Exception as e:
         return f"❌ Naver 접속 실패: {str(e)}"
 
+if __name__ == "__main__":
+    import os
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
+
+
 
 # 구글 시트 인증
 def get_worksheet():
