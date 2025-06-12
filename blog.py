@@ -8,6 +8,22 @@ import openai
 import json
 import threading
 
+# 테스트
+@app.route("/test-naver")
+def test_naver():
+    import requests
+    try:
+        res = requests.get(
+            "https://search.naver.com/search.naver?query=롯데호텔",
+            headers={"User-Agent": "Mozilla/5.0"},
+            timeout=10
+        )
+        return f"✅ Naver 접속 성공: {res.status_code}<br><br>{res.text[:500]}"
+    except Exception as e:
+        return f"❌ Naver 접속 실패: {str(e)}"
+
+
+
 # 구글 시트 인증
 def get_worksheet():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
