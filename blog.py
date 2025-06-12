@@ -8,7 +8,10 @@ import openai
 import json
 import threading
 
-# 테스트
+# ✅ Flask 앱 인스턴스 선언
+app = Flask(__name__)
+
+# ✅ 테스트 라우트는 반드시 app 정의 이후에 위치
 @app.route("/test-naver")
 def test_naver():
     import requests
@@ -21,7 +24,6 @@ def test_naver():
         return f"✅ Naver 접속 성공: {res.status_code}<br><br>{res.text[:500]}"
     except Exception as e:
         return f"❌ Naver 접속 실패: {str(e)}"
-
 
 
 # 구글 시트 인증
