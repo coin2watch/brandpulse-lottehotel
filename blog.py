@@ -165,6 +165,14 @@ def env_debug():
         return "GOOGLE_SERVICE_ACCOUNT_JSON is NOT set!", 500
     return f"Length: {len(val)}<br>Start: {val[:100]}<br>End: {val[-100:]}"
 
+@app.route("/file-debug")
+def file_debug():
+    import os
+    path = "coin2watch-youtube-2eb321e17fd0.json"
+    exists = os.path.exists(path)
+    return f"파일 존재 여부: {exists}"
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
