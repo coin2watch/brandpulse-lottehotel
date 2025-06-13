@@ -158,13 +158,6 @@ def run():
     t.start()
     return "<br>".join(["🔥 /run 라우트 호출됨"] + log + ["(실행 중, 새로고침하면 최신 로그가 갱신되지 않습니다)"])
 
-@app.route("/env-debug")
-def env_debug():
-    val = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
-    if not val:
-        return "GOOGLE_SERVICE_ACCOUNT_JSON is NOT set!", 500
-    return f"Length: {len(val)}<br>Start: {val[:100]}<br>End: {val[-100:]}"
-
 @app.route("/file-debug")
 def file_debug():
     import os
