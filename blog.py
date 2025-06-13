@@ -172,6 +172,13 @@ def file_debug():
     exists = os.path.exists(path)
     return f"파일 존재 여부: {exists}"
 
+@app.route("/env-debug")
+def env_debug():
+    val = os.environ.get("OPENAI_API_KEY")
+    if not val:
+        return "OPENAI_API_KEY is NOT set!", 500
+    return f"Length: {len(val)}<br>Start: {val[:10]}"
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
